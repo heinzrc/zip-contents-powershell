@@ -44,7 +44,9 @@ function GetDirContents {
     param (
         $DirPath
     )
+
     $files = Get-ChildItem -Path $DirPath -Recurse -Force
+
     foreach ($file in $files) {
         
         $FileShortName = $File.Fullname.Replace($DirPath,"")
@@ -85,11 +87,19 @@ function GetDirContents {
 #Start Input Type Check
 if ($SrcPath -like "*.zip") {
     Expand-Archive -Path $SrcPath -DestinationPath $TempPath 
-    GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
+    if (Test-Path "$TempPath\$(GetLeaf -Str $SrcPath)") {
+        GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
+    } else {
+        GetDirContents -DirPath "$TempPath"
+    }
 
 } elseif ($SrcPath -like "*.7z") {
     sz x -o"$TempPath" "$SrcPath"
-    GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
+    if (Test-Path "$TempPath\$(GetLeaf -Str $SrcPath)") {
+        GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
+    } else {
+        GetDirContents -DirPath "$TempPath"
+    }
 
 } else { #Just a folder
 
