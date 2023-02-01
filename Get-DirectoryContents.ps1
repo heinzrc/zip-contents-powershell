@@ -39,6 +39,7 @@ function GetLeaf {
     $LeafArr[0]
 }
 
+#Start Recursive Function
 function GetDirContents {
     param (
         $DirPath
@@ -79,7 +80,9 @@ function GetDirContents {
         } 
     } 
 }
+#End Recursive Function
 
+#Start Input Type Check
 if ($SrcPath -like "*.zip") {
     Expand-Archive -Path $SrcPath -DestinationPath $TempPath 
     GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
@@ -88,10 +91,11 @@ if ($SrcPath -like "*.zip") {
     sz x -o"$TempPath" "$SrcPath"
     GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
 
-} else {
+} else { #Just a folder
 
     GetDirContents -DirPath $SrcPath
 }
+#End Input Type Check
 
 #Get Rid of duplicates
 $SortedOutput = $Output | Sort-Object -Unique -Property "Filename"
