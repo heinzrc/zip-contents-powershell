@@ -50,34 +50,38 @@ function GetDirContents {
         $FileShortName = $FileShortName.Split(".")
         $ArchivePath = "$($DirPath)$($FileShortName[0]).$($FileShortName[1])"
 
-        if ($file.Extension -like "*.zip") {
-            Expand-Archive -Path $ArchivePath -DestinationPath $TempPath -Force
-            SetOutput -Name $File.name
-            
-            GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
-
-        } elseif ($file.Extension -like "*.7z") {
-            sz x -o"$TempPath" $ArchivePath
-            SetOutput -Name $File.name
-            
-            GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
-
-        } elseif ($file.Attributes -eq "Directory") {
-            Copy-Item -Path $ArchivePath -Destination $TempPath -Recurse -Force
-
-            SetOutput -Name $File.name
-
-            GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
-
-        } else {
-
-            SetOutput -Name $File.name
-        }
+        if (Test-Path $ArchivePath) {
+            if ($file.Extension -like "*.zip") {
+                Expand-Archive -Path $ArchivePath -DestinationPath $TempPath -Force
+                SetOutput -Name $File.name
+    
+                GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
+    
+            } elseif ($file.Extension -like "*.7z") {
+                sz x -o"$TempPath" $ArchivePath
+                SetOutput -Name $File.name
+                
+                GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
+    
+            } elseif ($file.Attributes -eq "Directory") {
+                Copy-Item -Path "$($DirPath)$($FileShortName[0])" -Destination $TempPath -Recurse -Force
+    
+                SetOutput -Name $File.name
+    
+                Remove-Item -Path "$($DirPath)$($FileShortName[0])" -Force -Recurse
+    
+                GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
+    
+            } else {
+    
+                SetOutput -Name $File.name
+            }
+        } 
     } 
 }
 
 if ($SrcPath -like "*.zip") {
-    Expand-Archive -Path $SrcPath -DestinationPath $TempPath
+    Expand-Archive -Path $SrcPath -DestinationPath $TempPath 
     GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
 
 } elseif ($SrcPath -like "*.7z") {
