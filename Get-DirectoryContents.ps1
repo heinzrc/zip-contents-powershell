@@ -26,8 +26,8 @@ function SetOutput {
         $Name
     )
     $Output.Add([PSCustomObject]@{
-        'Filename' = $Name
-    })
+            'Filename' = $Name
+        })
 }
 
 function GetLeaf {
@@ -49,8 +49,8 @@ function GetDirContents {
 
     foreach ($file in $files) {
         
-        $FileShortName = $File.Fullname.Replace($DirPath,"")
-        $FileShortName = $FileShortName.Split(".")
+        $FileShortName = $File.Fullname.Replace($DirPath, "")
+        $FileShortName = $FileShortName -Split '\.', 2 #Accounts for files with multiple file extensions
         $ArchivePath = "$($DirPath)$($FileShortName[0]).$($FileShortName[1])"
 
         if (Test-Path $ArchivePath) {
@@ -60,13 +60,15 @@ function GetDirContents {
     
                 GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
     
-            } elseif ($file.Extension -like "*.7z") {
+            }
+            elseif ($file.Extension -like "*.7z") {
                 sz x -o"$TempPath" $ArchivePath
                 SetOutput -Name $File.name
                 
                 GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
     
-            } elseif ($file.Attributes -eq "Directory") {
+            }
+            elseif ($file.Attributes -eq "Directory") {
                 Copy-Item -Path "$($DirPath)$($FileShortName[0])" -Destination $TempPath -Recurse -Force
     
                 SetOutput -Name $File.name
@@ -75,7 +77,8 @@ function GetDirContents {
     
                 GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
     
-            } else {
+            }
+            else {
     
                 SetOutput -Name $File.name
             }
@@ -89,19 +92,24 @@ if ($SrcPath -like "*.zip") {
     Expand-Archive -Path $SrcPath -DestinationPath $TempPath 
     if (Test-Path "$TempPath\$(GetLeaf -Str $SrcPath)") {
         GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
-    } else {
+    }
+    else {
         GetDirContents -DirPath "$TempPath"
     }
 
-} elseif ($SrcPath -like "*.7z") {
+}
+elseif ($SrcPath -like "*.7z") {
     sz x -o"$TempPath" "$SrcPath"
     if (Test-Path "$TempPath\$(GetLeaf -Str $SrcPath)") {
         GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
-    } else {
+    }
+    else {
         GetDirContents -DirPath "$TempPath"
     }
 
-} else { #Just a folder
+}
+else {
+    #Just a folder
 
     GetDirContents -DirPath $SrcPath
 }
