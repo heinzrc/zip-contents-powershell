@@ -44,7 +44,7 @@ function GetDirContents {
     param (
         $DirPath
     )
-
+    "Test: $DirPath"
     $files = Get-ChildItem -Path $DirPath -Recurse -Force
 
     foreach ($file in $files) {
@@ -52,7 +52,7 @@ function GetDirContents {
         $FileShortName = $File.Fullname.Replace($DirPath, "")
         $FileShortName = $FileShortName -Split '\.', 2 #Accounts for files with multiple file extensions
         $ArchivePath = "$($DirPath)$($FileShortName[0]).$($FileShortName[1])"
-
+        $FileShortName[0]
         if (Test-Path $ArchivePath) {
             if ($file.Extension -like "*.zip") {
                 Expand-Archive -Path $ArchivePath -DestinationPath $TempPath -Force
@@ -62,20 +62,17 @@ function GetDirContents {
     
             }
             elseif ($file.Extension -like "*.7z") {
-                sz x -o"$TempPath" $ArchivePath
+                sz x -y -o"$TempPath" $ArchivePath 
                 SetOutput -Name $File.name
                 
                 GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
     
             }
             elseif ($file.Attributes -eq "Directory") {
-                Copy-Item -Path "$($DirPath)$($FileShortName[0])" -Destination $TempPath -Recurse -Force
     
                 SetOutput -Name $File.name
     
-                Remove-Item -Path "$($DirPath)$($FileShortName[0])" -Force -Recurse
-    
-                GetDirContents -DirPath "$($TempPath)$($FileShortName[0])"
+                GetDirContents -DirPath "$($DirPath)$($FileShortName[0])"
     
             }
             else {
@@ -99,7 +96,7 @@ if ($SrcPath -like "*.zip") {
 
 }
 elseif ($SrcPath -like "*.7z") {
-    sz x -o"$TempPath" "$SrcPath"
+    sz x -y -o"$TempPath" "$SrcPath"
     if (Test-Path "$TempPath\$(GetLeaf -Str $SrcPath)") {
         GetDirContents -DirPath "$TempPath\$(GetLeaf -Str $SrcPath)"
     }
